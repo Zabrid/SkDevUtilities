@@ -1,0 +1,154 @@
+options:
+# ###################################################################
+
+# Zabrid's Developer Utilties
+# Author(s): {zabrid}#3433
+# Version: 1.0.0
+# Date 5/26/22
+
+# WORK IN PROGRESS
+
+# ###################################################################
+
+    # Hides the no permission message when a player tried /sk or /skript
+    # It is also recommended that you turn off `send-namespaced` in the spigot.yml
+    # otherwise all your custom commands will have `skript:` at the beginning.
+    hide-skript-command: true
+
+# ###################################################################
+
+# Zabrid's Developer Utilties
+# End of configuration
+
+# ###################################################################
+
+# Useful Features
+
+# This hides the /skript or /sk command
+on command:
+    {@hide-skript-command} is true
+    player does not have permission "skript.reload"
+    if command is "skript" or "sk":
+        cancel event
+        set {_sendFakeHelp} to true
+    else if command contains "skript:":
+        cancel event
+        set {_sendFakeHelp} to true
+    {_sendFakeHelp} is true
+    execute player command "adjfbguiadg9qegrt89e7viqeugbeiyeiyuge9tqr" # This will send the unknown command message
+
+# This adds /sk list, allowing you to see all of your
+# scripts aswell as what scripts are enabled and disabled.
+on command:
+    command is "skript" or "sk"
+    player has permission "skript.reload"
+    set {_args::*} to full command split by " "
+    if {_args::2} is "list":
+        cancel event
+        send "&7[&6Skript&7] &fFull list of all &aenabled&f/&cdisabled&f scripts."
+        send "&7&o(( Hover for more information about each script ))"
+        send "&7[&6Skript&7] &fEnabled Scripts:"
+        set {_linescount} to 0
+        loop enabled scripts:
+            set {_a} to true
+
+            set {_lines} to file "plugins/Skript/scripts/%loop-value%"'s line count
+            add {_lines} to {_linescount}
+            set {_lastModified} to unix date of file "plugins/Skript/scripts/%loop-value%"'s last modified value
+            set {_created} to unix date of file "plugins/Skript/scripts/%loop-value%"'s creation value
+            send formatted "<tooltip:&7%nl%&7[&6Skript&7]&f %loop-value%:%nl%&7 - &fLine Count: &b%{_lines}%&b%nl%&7 - &fLast Modified: &b%{_lastModified}%&b%nl%&7 - &fCreated: &b%{_created}%&b%nl%&7>&7 - &a%loop-value%"
+        if {_a} is not set:
+            send "&7 - &fNo enabled scripts."
+        else:
+            send "&b - %{_linescount}%&f total enabled lines."
+        send ""
+        send "&7[&6Skript&7] &fDisabled Scripts:"
+        set {_linescount} to 0
+        loop disabled scripts:
+            set {_b} to true 
+
+            set {_lines} to file "plugins/Skript/scripts/%loop-value%"'s line count
+            add {_lines} to {_linescount}
+            set {_lastModified} to unix date of file "plugins/Skript/scripts/%loop-value%"'s last modified value
+            set {_created} to unix date of file "plugins/Skript/scripts/%loop-value%"'s creation value
+            send formatted "<tooltip:&7%nl%&7[&6Skript&7]&f %loop-value%:%nl%&7 - &fLine Count: &b%{_lines}%&b%nl%&7 - &fLast Modified: &b%{_lastModified}%&b%nl%&7 - &fCreated: &b%{_created}%&b%nl%&7>&7 - &c%loop-value%"
+        if {_b} is not set:
+            send "&7 - &fNo disabled scripts."
+        else:
+            send "&b - %{_linescount}%&f total disabled lines."
+        send ""
+    else:
+        if {_args::2} is not "disable" or "enable" or "info" or "reload" or "update":
+            wait 1 tick
+            send "&b  list &7- &fPrints a full list of all enabled & disabled scripts."
+on load:
+    wait 1 tick
+    loop scripts:
+        set {devutils-lines::%loop-value%} to file "plugins/Skript/scripts/%loop-value%"'s line count
+on skript load:
+    delete {devutils-lines::*}
+    loop scripts:
+        set {devutils-lines::%loop-value%} to file "plugins/Skript/scripts/%loop-value%"'s line count
+
+# Get information on reload
+on command:
+    "$/$4$%full command%" contains "$/$4$skript reload" or "$/$4$sk reload"
+    if player has permission "skript.reload":
+        set {_allow} to true
+    else if sender is console:
+        set {_allow} to true
+    {_allow} is true
+    set {_script} to "/%full command%"
+    replace all "/skript:" and "/sk" and "/skript" and "reload " and " " with "" in {_script}
+    set {_script3} to {_script}
+    replace all "\" with "/" in {_script}
+    if {_script} ends with "/":
+        set {_lines} to 0
+        loop files in dir "plugins/Skript/scripts/%{_script}%":
+            set {_split::*} to split loop-value by "\"
+            set {_script2} to {_split::%size of {_split::*}%}
+            replace all "\" in {_script2} with "/"
+            set {_script4} to subtext of {_script3} from characters 2 to (length of {_script3})
+            add {devutils-lines::%{_script4}%%{_script2}%} to {_lines}
+    else:
+        set {_lines} to {devutils-lines::%{_script}%}
+    set {_now} to now
+    set {_tps::*} to "%tps%" split by ","
+    set {_tps} to {_tps::1} parsed as number 
+    wait 1 tick
+    set {_newtps::*} to "%tps%" split by ","
+    set {_newtps} to {_newtps::1} parsed as number 
+    set {_newtps2} to {_newtps::1} parsed as number 
+    set {_newtps} to {_tps} - {_newtps}
+    set {_newnow} to now
+    if {_script} ends with "/":
+        set {_newlines} to 0
+        loop files in dir "plugins/Skript/scripts/%{_script}%":
+            set {_split::*} to split loop-value by "plugins/Skript/scripts/%{_script}%"
+            replace all "\" in {_split::2} with "/"
+            set {_newlines} to file "%loop-value%"'s line count + {_newlines}
+            set {devutils-lines::%{_script}%%{_split::2}%} to file "%loop-value%"'s line count
+    else:
+        set {_newlines} to file "plugins/Skript/scripts/%{_script}%"'s line count
+        set {devutils-lines::%{_script}%} to {_newlines}
+    set {_newlines2} to {_newlines} - {_lines}
+    if {_newlines2} is less than 0:
+        set {_newlines2} to "&c%{_newlines2}%"
+    else if {_newlines2} is greater than 0:
+        set {_newlines2} to "&a+%{_newlines2}%"
+    else:
+        set {_newlines2} to "No Change"
+    if {_newtps} is greater than or equal to 0:
+        set {_newtps} to "No Change"
+    else:
+        set {_newtps} to "&c-%{_newtps}% TPS"
+    loop all players:
+        loop-player has permission "skript.reload"
+        send "&7[&6Skript&7] &f%sender% reloaded &b%{_script}%"
+        send "&6 - &fTime Elapsed: &b%difference between {_now} and {_newnow}%"
+        send "&6 - &fTPS Change: &b%{_newtps}% &7[&6%{_tps}% -> %{_newtps2}%&7]"
+        send "&6 - &fLine Amount: &b%{_newlines2}% &7[&6%{_lines}% -> %{_newlines}%&7]"
+    send "&7[&6Skript&7] &f%sender% reloaded &b%{_script}%" to console
+    send "&6 - &fTime Elapsed: &b%difference between {_now} and {_newnow}%" to console
+    send "&6 - &fTPS Change: &b%{_newtps}% &7[&6%{_tps}% -> %{_newtps2}%&7]" to console
+    send "&6 - &fLine Amount: &b%{_newlines2}% &7[&6%{_lines}% -> %{_newlines}%&7]" to console
