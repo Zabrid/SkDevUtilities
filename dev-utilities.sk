@@ -98,11 +98,14 @@ on command:
     else if sender is console:
         set {_allow} to true
     {_allow} is true
+    set {_all} to false
     set {_script} to "/%full command%"
     replace all "/skript:" and "/sk" and "/skript" and "reload " and " " with "" in {_script}
     set {_script3} to {_script}
     replace all "\" with "/" in {_script}
-    if {_script} ends with "/":
+    if {_script} contain "all":
+        set {_all} to true
+    else if {_script} ends with "/":
         set {_lines} to 0
         loop files in dir "plugins/Skript/scripts/%{_script}%":
             set {_split::*} to split loop-value by "\"
@@ -121,13 +124,15 @@ on command:
     set {_newtps2} to {_newtps::1} parsed as number 
     set {_newtps} to {_tps} - {_newtps}
     set {_newnow} to now
-    if {_script} ends with "/":
+    if {_all} is true:
+        send "&7[&6Skript&7] &f%sender% reloaded &ball"
+    else if {_script} ends with "/":
         set {_newlines} to 0
         loop files in dir "plugins/Skript/scripts/%{_script}%":
             set {_split::*} to split loop-value by "plugins/Skript/scripts/%{_script}%"
             replace all "\" in {_split::2} with "/"
-            set {_newlines} to file "%loop-value%"'s line count + {_newlines}
-            set {devutils-lines::%{_script}%%{_split::2}%} to file "%loop-value%"'s line count
+            set {_newlines} to file loop-value's line count + {_newlines}
+            set {devutils-lines::%{_script}%%{_split::2}%} to file loop-value's line count
     else:
         set {_newlines} to file "plugins/Skript/scripts/%{_script}%"'s line count
         set {devutils-lines::%{_script}%} to {_newlines}
@@ -144,10 +149,10 @@ on command:
         set {_newtps} to "&c-%{_newtps}% TPS"
     loop all players:
         loop-player has permission "skript.reload"
-        send "&7[&6Skript&7] &f%sender% reloaded &b%{_script}%"
+        send "&7[&6Skript&7] &f%sender% reloaded &b%{_script}%" if {_all} is false
         send "&6 - &fTime Elapsed: &b%difference between {_now} and {_newnow}%"
         send "&6 - &fTPS Change: &b%{_newtps}% &7[&6%{_tps}% -> %{_newtps2}%&7]"
-        send "&6 - &fLine Amount: &b%{_newlines2}% &7[&6%{_lines}% -> %{_newlines}%&7]"
+        send "&6 - &fLine Amount: &b%{_newlines2}% &7[&6%{_lines}% -> %{_newlines}%&7]" if {_all} is false
     send "&7[&6Skript&7] &f%sender% reloaded &b%{_script}%" to console
     send "&6 - &fTime Elapsed: &b%difference between {_now} and {_newnow}%" to console
     send "&6 - &fTPS Change: &b%{_newtps}% &7[&6%{_tps}% -> %{_newtps2}%&7]" to console
